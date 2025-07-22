@@ -230,6 +230,4 @@ jobs:
           echo "- 📊 **React Native**: StyleSheet analysis" >> $GITHUB_STEP_SUMMARY
           echo "- 🚨 **Code Smells**: Quality issues detection" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📁 **Artifacts uploaded**: jsx-stylesheet-reports" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
           echo "🎉 **JSX & Stylesheet validation completed!**" >> $GITHUB_STEP_SUMMARY
