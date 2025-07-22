@@ -25,8 +25,8 @@ jobs:
 
       - name: 📦 Install dependencies
         run: |
-          npm ci
-          npm install -g @expo/cli eslint prettier jest
+          npm ci --legacy-peer-deps
+          npm install -g @expo/cli eslint prettier jest --legacy-peer-deps
 
       - name: 📝 Show project info
         run: |

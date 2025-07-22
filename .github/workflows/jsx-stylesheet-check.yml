@@ -41,8 +41,8 @@ jobs:
 
       - name: 📦 Install dependencies
         run: |
-          npm ci
-          npm install -g @expo/cli stylelint
+          npm ci --legacy-peer-deps
+          npm install -g @expo/cli stylelint --legacy-peer-deps
 
       - name: 📄 Analyze JSX files
         run: |
@@ -85,10 +85,12 @@ jobs:
       - name: 🎨 Stylesheet Linting with Stylelint
         run: |
           echo "🎨 Setting up Stylelint for CSS/Stylesheet validation..."
-          npm install stylelint stylelint-config-standard || echo "Stylelint installation completed"
+          npm install stylelint stylelint-config-standard --legacy-peer-deps || echo "Stylelint installation completed"
           
-          echo "Creating stylelint config..."
-          echo '{ "extends": ["stylelint-config-standard"] }' > .stylelintrc.json
+          echo "Using existing stylelint config or creating one..."
+          if [ ! -f .stylelintrc.json ]; then
+            echo '{ "extends": ["stylelint-config-standard"] }' > .stylelintrc.json
+          fi
           
           echo "Running Stylelint..."
           npx stylelint "**/*.{css,scss,sass,less}" --formatter json --output-file stylesheet-lint-report.json || echo "Stylesheet linting completed"
