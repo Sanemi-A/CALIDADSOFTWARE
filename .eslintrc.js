@@ -20,12 +20,27 @@ module.exports = {
     'no-console': 'warn',
     'no-debugger': 'error',
     
-    // Mejores prácticas de React
+    // React específico
     'react/prop-types': 'error',
     'react/no-unused-prop-types': 'warn',
     'react/no-array-index-key': 'warn',
     'react/jsx-key': 'error',
     'react/jsx-no-bind': 'warn',
+    'react/jsx-pascal-case': 'error',
+    'react/jsx-closing-bracket-location': 'error',
+    'react/jsx-closing-tag-location': 'error',
+    'react/jsx-curly-spacing': ['error', 'never'],
+    'react/jsx-equals-spacing': ['error', 'never'],
+    'react/jsx-first-prop-new-line': ['error', 'multiline'],
+    'react/jsx-indent': ['error', 2],
+    'react/jsx-indent-props': ['error', 2],
+    'react/jsx-max-props-per-line': ['error', { maximum: 3 }],
+    'react/jsx-no-duplicate-props': 'error',
+    'react/jsx-no-undef': 'error',
+    'react/jsx-uses-react': 'error',
+    'react/jsx-uses-vars': 'error',
+    'react/jsx-wrap-multilines': 'error',
+    'react/self-closing-comp': 'error',
     
     // React Hooks
     'react-hooks/rules-of-hooks': 'error',

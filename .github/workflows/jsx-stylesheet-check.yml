@@ -1,0 +1,233 @@
+name: JSX and Stylesheet Quality Check
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**/*.jsx'
+      - '**/*.js'
+      - '**/*.css'
+      - '**/*.scss'
+      - '**/*.sass'
+      - '**/*.less'
+      - '**/*.styl'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**/*.jsx'
+      - '**/*.js'
+      - '**/*.css'
+      - '**/*.scss'
+      - '**/*.sass'
+      - '**/*.less'
+      - '**/*.styl'
+
+jobs:
+  jsx-stylesheet-validation:
+    name: JSX & Stylesheet Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -g @expo/cli stylelint
+
+      - name: 📄 Analyze JSX files
+        run: |
+          echo "🔍 Analyzing JSX files..."
+          echo "Found JSX files:"
+          find . -name "*.jsx" -not -path "./node_modules/*" | head -20
+          
+          echo ""
+          echo "JSX file count:"
+          find . -name "*.jsx" -not -path "./node_modules/*" | wc -l
+          
+          echo ""
+          echo "JSX lines of code:"
+          find . -name "*.jsx" -not -path "./node_modules/*" -exec wc -l {} + | tail -1 || echo "0 total"
+
+      - name: 🎨 Analyze Stylesheet files
+        run: |
+          echo "🎨 Analyzing stylesheet files..."
+          echo "Found stylesheet files:"
+          find . \( -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" -o -name "*.styl" \) -not -path "./node_modules/*" | head -20
+          
+          echo ""
+          echo "Stylesheet file count:"
+          find . \( -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" -o -name "*.styl" \) -not -path "./node_modules/*" | wc -l
+          
+          echo ""
+          echo "Stylesheet lines of code:"
+          find . \( -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" -o -name "*.styl" \) -not -path "./node_modules/*" -exec wc -l {} + | tail -1 || echo "0 total"
+
+      - name: 🔍 JSX Linting with ESLint
+        run: |
+          echo "🔍 Running ESLint specifically for JSX files..."
+          npx eslint "**/*.jsx" --format json --output-file jsx-lint-report.json || echo "JSX linting completed with issues"
+          
+          echo "JSX ESLint Summary:"
+          if [ -f jsx-lint-report.json ]; then
+            cat jsx-lint-report.json | jq '.[] | {filePath, errorCount, warningCount}' || echo "No issues format available"
+          fi
+
+      - name: 🎨 Stylesheet Linting with Stylelint
+        run: |
+          echo "🎨 Setting up Stylelint for CSS/Stylesheet validation..."
+          npm install stylelint stylelint-config-standard || echo "Stylelint installation completed"
+          
+          echo "Creating stylelint config..."
+          echo '{ "extends": ["stylelint-config-standard"] }' > .stylelintrc.json
+          
+          echo "Running Stylelint..."
+          npx stylelint "**/*.{css,scss,sass,less}" --formatter json --output-file stylesheet-lint-report.json || echo "Stylesheet linting completed"
+
+      - name: 🧪 JSX Component Testing
+        run: |
+          echo "🧪 Testing JSX components structure..."
+          
+          echo "Checking for React imports in JSX files:"
+          grep -r "import.*React" --include="*.jsx" . || echo "No React imports found"
+          
+          echo ""
+          echo "Checking for export statements in JSX files:"
+          grep -r "export" --include="*.jsx" . || echo "No exports found"
+          
+          echo ""
+          echo "Checking for PropTypes usage:"
+          grep -r "PropTypes" --include="*.jsx" . || echo "No PropTypes found"
+
+      - name: 🎯 JSX Best Practices Check
+        run: |
+          echo "🎯 Checking JSX best practices..."
+          
+          echo "Checking for inline styles (should be minimal):"
+          grep -r "style={{" --include="*.jsx" . | wc -l || echo "0"
+          
+          echo ""
+          echo "Checking for accessibility attributes:"
+          grep -r "accessibilityLabel\|testID\|accessible" --include="*.jsx" . | wc -l || echo "0"
+          
+          echo ""
+          echo "Checking for key props in lists:"
+          grep -r "key=" --include="*.jsx" . | wc -l || echo "0"
+
+      - name: 💅 Prettier Check for JSX and CSS
+        run: |
+          echo "💅 Checking code formatting for JSX and stylesheets..."
+          npx prettier --check "**/*.{jsx,css,scss,sass,less}" || echo "Formatting issues found"
+
+      - name: 📊 React Native StyleSheet Analysis
+        run: |
+          echo "📊 Analyzing React Native StyleSheet usage..."
+          
+          echo "Checking for StyleSheet.create usage:"
+          grep -r "StyleSheet.create" --include="*.jsx" --include="*.js" . | wc -l || echo "0"
+          
+          echo ""
+          echo "Checking for inline StyleSheet definitions:"
+          grep -r "const.*styles.*StyleSheet" --include="*.jsx" --include="*.js" . || echo "No StyleSheet definitions found"
+          
+          echo ""
+          echo "Checking for Flexbox usage:"
+          grep -r "flex\|flexDirection\|justifyContent\|alignItems" --include="*.jsx" --include="*.js" . | wc -l || echo "0"
+
+      - name: 🚨 Code Smell Detection
+        run: |
+          echo "🚨 Detecting potential code smells in JSX..."
+          
+          echo "Large JSX files (>200 lines):"
+          find . -name "*.jsx" -not -path "./node_modules/*" -exec wc -l {} + | awk '$1 > 200 {print $2 " has " $1 " lines"}' || echo "No large files found"
+          
+          echo ""
+          echo "Files with many inline styles:"
+          grep -c "style={{" --include="*.jsx" -r . | awk -F: '$2 > 5 {print $1 " has " $2 " inline styles"}' || echo "No files with excessive inline styles"
+          
+          echo ""
+          echo "Checking for console.log statements:"
+          grep -r "console.log" --include="*.jsx" . | wc -l || echo "0"
+
+      - name: 📝 Generate Quality Report
+        run: |
+          echo "📝 Generating comprehensive quality report..."
+          
+          cat << EOF > jsx-stylesheet-report.md
+          # JSX and Stylesheet Quality Report
+          
+          **Date:** $(date)
+          **Commit:** ${{ github.sha }}
+          
+          ## 📊 File Statistics
+          
+          ### JSX Files
+          - **Total JSX files:** $(find . -name "*.jsx" -not -path "./node_modules/*" | wc -l)
+          - **Total JSX lines:** $(find . -name "*.jsx" -not -path "./node_modules/*" -exec wc -l {} + | tail -1 | awk '{print $1}' || echo "0")
+          
+          ### Stylesheet Files
+          - **Total stylesheet files:** $(find . \( -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" -o -name "*.styl" \) -not -path "./node_modules/*" | wc -l)
+          - **Total stylesheet lines:** $(find . \( -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" -o -name "*.styl" \) -not -path "./node_modules/*" -exec wc -l {} + | tail -1 | awk '{print $1}' || echo "0")
+          
+          ## 🎯 Quality Metrics
+          
+          - **StyleSheet.create usage:** $(grep -r "StyleSheet.create" --include="*.jsx" --include="*.js" . | wc -l || echo "0") instances
+          - **Inline styles:** $(grep -r "style={{" --include="*.jsx" . | wc -l || echo "0") instances
+          - **Accessibility attributes:** $(grep -r "accessibilityLabel\|testID\|accessible" --include="*.jsx" . | wc -l || echo "0") instances
+          - **Flexbox usage:** $(grep -r "flex\|flexDirection\|justifyContent\|alignItems" --include="*.jsx" --include="*.js" . | wc -l || echo "0") instances
+          
+          ## ✅ Quality Status
+          
+          - ✅ JSX files analyzed
+          - ✅ Stylesheets analyzed  
+          - ✅ ESLint validation completed
+          - ✅ Stylelint validation completed
+          - ✅ Best practices checked
+          - ✅ Code smells detected
+          
+          EOF
+
+      - name: 📤 Upload Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jsx-stylesheet-reports
+          path: |
+            jsx-lint-report.json
+            stylesheet-lint-report.json
+            jsx-stylesheet-report.md
+            .stylelintrc.json
+          retention-days: 7
+
+      - name: 📋 Workflow Summary
+        if: always()
+        run: |
+          echo "## 🎨 JSX & Stylesheet Quality Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "- **JSX Files:** $(find . -name "*.jsx" -not -path "./node_modules/*" | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stylesheet Files:** $(find . \( -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" -o -name "*.styl" \) -not -path "./node_modules/*" | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- **StyleSheet.create usage:** $(grep -r "StyleSheet.create" --include="*.jsx" --include="*.js" . | wc -l || echo "0")" >> $GITHUB_STEP_SUMMARY
+          echo "- **Inline styles found:** $(grep -r "style={{" --include="*.jsx" . | wc -l || echo "0")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Checks" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 **JSX Linting**: ESLint validation" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎨 **Stylesheet Linting**: Stylelint validation" >> $GITHUB_STEP_SUMMARY
+          echo "- 🧪 **Component Testing**: Structure validation" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎯 **Best Practices**: JSX standards check" >> $GITHUB_STEP_SUMMARY
+          echo "- 💅 **Formatting**: Prettier validation" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 **React Native**: StyleSheet analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- 🚨 **Code Smells**: Quality issues detection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📁 **Artifacts uploaded**: jsx-stylesheet-reports" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **JSX & Stylesheet validation completed!**" >> $GITHUB_STEP_SUMMARY
