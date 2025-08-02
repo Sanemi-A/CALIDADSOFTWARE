@@ -1,0 +1,134 @@
+# Model Configuration
+model:
+  name: "unet"
+  backbone: "resnet34"
+  pretrained: true
+  num_classes: 8
+  input_channels: 3
+  
+# Training Configuration
+training:
+  batch_size: 16
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: "adam"
+  
+  # Learning Rate Scheduling
+  lr_scheduler:
+    type: "cosine"
+    min_lr: 0.00001
+    warmup_epochs: 5
+  
+  # Early Stopping
+  early_stopping:
+    patience: 15
+    min_delta: 0.001
+    monitor: "val_miou"
+    mode: "max"
+
+# Data Configuration
+data:
+  image_size: [512, 512]
+  train_split: 0.7
+  val_split: 0.2
+  test_split: 0.1
+  num_workers: 4
+  pin_memory: true
+  
+  # Data Augmentation
+  augmentation:
+    horizontal_flip: 0.5
+    vertical_flip: 0.5
+    rotation: 15
+    brightness: 0.1
+    contrast: 0.1
+    saturation: 0.1
+    hue: 0.05
+    
+# Class Configuration
+classes:
+  num_classes: 8
+  class_names:
+    - "Bareland"
+    - "Rangeland" 
+    - "Developed space"
+    - "Road"
+    - "Tree"
+    - "Water"
+    - "Agriculture land"
+    - "Building"
+  
+  class_colors:
+    - "#800000"  # Bareland
+    - "#00FF24"  # Rangeland
+    - "#949494"  # Developed space
+    - "#FFFFFF"  # Road
+    - "#226126"  # Tree
+    - "#0045FF"  # Water
+    - "#4BB549"  # Agriculture land
+    - "#DE1F07"  # Building
+    
+  class_weights:
+    - 1.0  # Will be calculated from dataset distribution
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+
+# Paths
+paths:
+  data_dir: "data"
+  train_images: "data/train/images"
+  train_masks: "data/train/masks"
+  val_images: "data/val/images"
+  val_masks: "data/val/masks"
+  test_images: "data/test/images"
+  test_masks: "data/test/masks"
+  models_dir: "models"
+  logs_dir: "logs"
+  outputs_dir: "outputs"
+
+# Logging and Monitoring
+logging:
+  log_level: "INFO"
+  log_to_file: true
+  log_file: "logs/training.log"
+  
+  # Weights & Biases integration
+  wandb:
+    enabled: false
+    project: "land-cover-segmentation"
+    entity: null
+    
+  # TensorBoard integration
+  tensorboard:
+    enabled: true
+    log_dir: "logs/tensorboard"
+
+# Evaluation Configuration
+evaluation:
+  metrics:
+    - "iou"
+    - "miou"
+    - "pixel_accuracy"
+    - "f1_score"
+    - "precision"
+    - "recall"
+  
+  save_predictions: true
+  save_confusion_matrix: true
+  visualize_results: true
+
+# Hardware Configuration
+hardware:
+  device: "auto"  # auto, cpu, cuda, mps
+  mixed_precision: true
+  compile_model: false  # PyTorch 2.0+ compilation
+
+# Reproducibility
+seed: 42
+deterministic: true
